@@ -23,44 +23,6 @@
 
 import SwiftUI
 
-private struct Char: Identifiable {
-    var id: String { "\(index) \(char)" }
-
-    let index: Int
-    let char: Character
-}
-
-extension Char {
-    var string: String { "\(char)" }
-}
-
-struct TextViewSizeKey: PreferenceKey {
-    typealias Value = [CGSize]
-
-    static var defaultValue: [CGSize] { [] }
-    static func reduce(value: inout [CGSize], nextValue: () -> [CGSize]) {
-        value.append(contentsOf: nextValue())
-    }
-}
-
-struct PropagateSize<V: View>: View {
-    var content: () -> V
-    var body: some View {
-        GeometryReader { proxy in
-            self.content()
-                .background(GeometryReader { proxy in
-                    Color.clear.preference(key: TextViewSizeKey.self, value: [proxy.size])
-                })
-        }
-    }
-}
-
-extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
-    }
-}
-
 public struct CrookedText: View {
 
     public enum Position {
@@ -71,8 +33,8 @@ public struct CrookedText: View {
     public let radius: CGFloat
     public let alignment: Position
 
-    private var textModifier: (Text) -> Text
-    private var spacing: CGFloat = 0
+    internal var textModifier: (Text) -> Text
+    internal var spacing: CGFloat = 0
 
     @State private var sizes: [CGSize] = []
 
@@ -100,7 +62,7 @@ public struct CrookedText: View {
     public var body: some View {
         VStack {
             ZStack {
-                ForEach(chars()) { item in
+                ForEach(textAsCharacters()) { item in
                     PropagateSize {
                         self.textView(char: item)
                     }
@@ -119,11 +81,11 @@ public struct CrookedText: View {
         .accessibility(label: Text(text))
     }
 
-    private func chars() -> [Char] {
-        text.enumerated().map(Char.init)
+    private func textAsCharacters() -> [IdentifiableCharacter] {
+        text.enumerated().map(IdentifiableCharacter.init)
     }
 
-    private func textView(char: Char) -> some View {
+    private func textView(char: IdentifiableCharacter) -> some View {
         textModifier(Text(char.string))
     }
 
@@ -148,70 +110,4 @@ public struct CrookedText: View {
         let charArcOffset = prevArcWidth + charOffset + arcCharCenteringOffset + arcSpacingOffset + prevArcSpacingWidth
         return Angle(radians: charArcOffset)
     }
-}
-
-extension CrookedText {
-    public func kerning(_ kerning: CGFloat) -> CrookedText {
-        var copy = self
-        copy.spacing = kerning
-        return copy
-    }
-
-    public func italic() -> CrookedText {
-        var copy = self
-        copy.textModifier = {
-            self.textModifier($0)
-                .italic()
-        }
-        return copy
-    }
-
-    public func bold() -> CrookedText {
-        fontWeight(.bold)
-    }
-
-    public func fontWeight(_ weight: Font.Weight?) -> CrookedText {
-        var copy = self
-        copy.textModifier = {
-            self.textModifier($0)
-                .fontWeight(weight)
-        }
-        return copy
-    }
-
-    public func baselineOffset(_ offset: CGFloat) -> CrookedText {
-        var copy = self
-        copy.textModifier = {
-            self.textModifier($0)
-                .baselineOffset(offset)
-        }
-        return copy
-    }
-
-    public func underline(_ active: Bool = true, color: Color? = nil) -> CrookedText {
-        var copy = self
-        copy.textModifier = {
-            self.textModifier($0)
-                .underline(active, color: color)
-        }
-        return copy
-    }
-
-    public func strikethrough(_ active: Bool = true, color: Color? = nil) -> CrookedText {
-        var copy = self
-        copy.textModifier = {
-            self.textModifier($0)
-                .strikethrough(active, color: color)
-        }
-        return copy
-    }
-
-//    public func legibillityWeighted(regular: Font.Weight, bold: Font.Weight) -> some View {
-//        var copy = self
-//        copy.textModifier = {
-//            self.textModifier($0)
-//                .legibillityWeighted(regular: regular, bold: bold)
-//        }
-//        return copy
-//    }
 }

@@ -3,7 +3,7 @@
 Draw crooked text in SwiftUI.
 
 ## TODO
- - [ ] Move to separate files
+ - [x] Move to separate files
  - [ ] Create SPM
  - [ ] Logo for header in readme
  - [ ] Support text along path shapes instead of only circle (https://talk.objc.io/episodes/S01E165-animating-along-paths).
