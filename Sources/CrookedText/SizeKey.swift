@@ -13,6 +13,7 @@ internal struct PropagateSize<V: View>: View {
     var body: some View {
         GeometryReader { proxy in
             self.content()
+                .fixedSize()
                 .background(GeometryReader { proxy in
                     Color.clear.preference(key: TextViewSizeKey.self, value: [proxy.size])
                 })
